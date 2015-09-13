@@ -8,7 +8,9 @@
         http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd
         http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring.xsd"
        default-lazy-init="false">
-
+	
+	<context:component-scan base-package="com.zhl.test.cobar"></context:component-scan>
+	
     <!-- 加载配置文件-->
     <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
         <property name="location">
@@ -104,28 +106,72 @@
         <property name="poolPreparedStatements" value="true" />
         <property name="maxPoolPreparedStatementPerConnectionSize" value="20" />
     </bean>
+    
+    <!-- 配置路由规则开始 -->  
+    <bean id="hashFunction" class="com.zhl.test.cobar.rule.HashFunction"></bean>  
+    <bean id="internalRouter"  
+        class="com.alibaba.cobar.client.router.config.CobarInteralRouterXmlFactoryBean">  
+        <!-- functionsMap是在使用自定义路由规则函数的时候使用 -->  
+        <property name="functionsMap">  
+            <map>  
+                <entry key="hash" value-ref="hashFunction"></entry>  
+            </map>  
+        </property>  
+        <property name="configLocations">  
+            <list>  
+                <value>classpath:dbRule/sharding-rules-on-namespace.xml</value>  
+            </list>  
+        </property>  
+    </bean>  
+	<!-- 配置路由规则结束 --> 
 	
 	<!-- mybatis文件配置，扫描所有mapper文件 -->
-    <bean id="sqlSessionFactory"
-          class="org.mybatis.spring.SqlSessionFactoryBean"
-          p:dataSource-ref="dataSource"
+    <!-- <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean"
+          p:dataSource-ref="dataSources"
           p:configLocation="classpath:mybatis-config.xml"
-          p:mapperLocations="classpath:mapper/*.xml">
+          p:mapperLocations="classpath:mapper/*.xml"> -->
           <!-- configLocation为mybatis属性 mapperLocations为所有mapper-->
-    </bean>
+    <!-- </bean> -->
        
    	<!-- spring与mybatis整合配置，扫描所有dao -->
- 	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer"
-        p:basePackage="com.zhl.test.rmi.hessianserver.dao"
+ 	<!-- <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer"
+        p:basePackage="com.zhl.test.cobar.dao"
         p:sqlSessionFactoryBeanName="sqlSessionFactory">
-    </bean>
+    </bean> -->
     
     <!-- 设定transactionManager -->
-	<bean id="transactionManager"
+	<!-- <bean id="transactionManager"
 	 class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
 	 <property name="dataSource" ref="dataSource" />
-	</bean>
+	</bean> -->
+	<!-- 事务配置 -->  
+    <bean id="transactionManager" class="com.alibaba.cobar.client.transaction.MultipleDataSourcesTransactionManager">  
+        <property name="cobarDataSourceService" ref="dataSources"/>  
+    </bean> 
     
 	<!--启动spring注解功能-->
-	<tx:annotation-driven transaction-manager="transactionManager" />
+	<tx:annotation-driven transaction-manager="transactionManager"  proxy-target-class="true"/>
+	
+	<!--  iBatis SQL map定义。-->
+	<bean id="sqlMapClient" class="org.springframework.orm.ibatis.SqlMapClientFactoryBean">  
+        <!-- 这里配置的dataSource0为默认的数据源,如果找不到数据库的话则到该数据源中查找 -->  
+        <property name="dataSource" ref="dataSource0" />    
+        <property name="configLocation">  
+            <value>classpath:/sqlmap-config.xml</value>  
+        </property>  
+    </bean>  
+      
+    <!-- 工程里一定要使用此工程模板，不能再使用ibatis原生的api，不然有的情况会不经过cobar的过滤 -->  
+    <bean id="sqlMapClientTemplate" class="com.alibaba.cobar.client.CobarSqlMapClientTemplate">  
+        <property name="sqlMapClient" ref="sqlMapClient" />  
+        <property name="cobarDataSourceService" ref="dataSources" />  
+        <property name="router" ref="internalRouter" />  
+        <property name="sqlAuditor">  
+            <bean class="com.alibaba.cobar.client.audit.SimpleSqlAuditor" />  
+        </property>  
+        <property name="profileLongTimeRunningSql" value="true" />  
+        <property name="longTimeRunningSqlIntervalThreshold" value="3600000" />  
+    </bean> 
+    
+    
 </beans>
