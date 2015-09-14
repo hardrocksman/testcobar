@@ -10,18 +10,18 @@ public class StartMain {
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		
+
 		ApplicationContext context = new ClassPathXmlApplicationContext("applicationContext.xml");
 		ITestService testService = (ITestService) context.getBean("testService");
-		
-		for(int i = 0; i < 1000; i++){
+
+		for(int i = 0; i < 50; i++){
 			UserInfo userInfo = new UserInfo();
 			userInfo.setAge(10);
 			userInfo.setCobarId(i);
 			userInfo.setPassword("aaaaaaaaaaaab" + i);
 			userInfo.setUserId(i);
 			userInfo.setUsername("aaaaa" + i);
-			
+
 			testService.insert(userInfo);
 		}
 	}

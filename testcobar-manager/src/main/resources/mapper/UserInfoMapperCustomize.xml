@@ -8,14 +8,14 @@
     <result column="age" property="age" jdbcType="INTEGER" />
     <result column="cobarId" property="cobarId" jdbcType="INTEGER" />
   </resultMap>
-  
-  <select id="selectAllUser" resultMap="UserInfoMapperCustomize" parameterClass="hashMap">
-	select * from user where user_name like #userName#
+
+  <select id="user.selectAllUser" resultMap="UserInfoMapperCustomize" parameterClass="hashMap">
+	select user_id,user_name,password,age,cobarId from user where user_name like #userName#
   </select>
-  
+
   <insert id="user.insertUser" parameterClass="com.zhl.test.cobar.model.UserInfo">
-		INSERT INTO user(user_name,password,age,cobarId) 
+		INSERT INTO user(user_name,password,age,cobarId)
 		values(#username#,#password#,#age#,#cobarId#)
 	</insert>
-	
+
 </sqlMap>

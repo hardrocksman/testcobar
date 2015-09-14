@@ -25,7 +25,7 @@ public class UserInfoDao {
 	@SuppressWarnings({ "unchecked"})
 	public List<UserInfo> selectAllUser(Map<String, Object> param){
 		return (List<UserInfo>) this.sqlMapClientTemplate.queryForList(
-				"selectAllUser", param);
+				"user.selectAllUser", param);
 	}
 	
 
